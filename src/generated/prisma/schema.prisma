@@ -131,6 +131,7 @@ model Imagecollections {
   completed                     String?
   imagestatus                   Boolean?
   userid                        String?
+  qcimagestatus                 Boolean?
 
   @@map("imagecollections")
 }

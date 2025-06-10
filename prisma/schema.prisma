@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  // output   = "../src/generated/prisma"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -130,7 +130,7 @@ model Imagecollections {
   completed                     String?
   imagestatus                   Boolean?
   userid                        String?
-
+  qcimagestatus                 Boolean?
   @@map("imagecollections")
 }
 

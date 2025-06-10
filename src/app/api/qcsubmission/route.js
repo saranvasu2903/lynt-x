@@ -1,7 +1,8 @@
 import { PrismaClient } from '../../../generated/prisma';
 import { logUserAction } from '../services/logservice';
+
 const prisma = new PrismaClient();
- 
+
 export async function POST(request) {
   try {
     const organizationId = request.headers.get('x-organization-id');
@@ -87,6 +88,66 @@ export async function POST(request) {
       organizationid: parsedOrganizationId,
       role,
       action: `Submitted QC form for image '${image_name}' in batch '${batch_name}' at level ${levelString}, updated ${fieldEntries.length} field(s)`,
+    });
+
+    const images = await prisma.imagecollections.findMany({
+      where: {
+        batchname: batch_name,
+      },
+      select: {
+        id: true,
+        filename: true,
+        image: true,
+        organizationId: true,
+        assigned: true,
+        completed: true,
+        imagestatus: true,
+        userid: true,
+      },
+    });
+
+    const combinedImagePath = `${batch_name}/${image_name}`;
+    const filteredImage = images.find((img) => {
+      const imagePath = img.image.replace(/^\/uploads\//, '');
+      return imagePath === combinedImagePath;
+    });
+
+    const activeTemplates = await prisma.template.findMany({
+      where: {
+        isActive: true,
+        isDelete: false,
+        organizationId: parsedOrganizationId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    const templateIds = activeTemplates.map(template => template.id);
+
+    const qcSubmissions = await prisma.qcFormSubmission.findMany({
+      where: {
+        batch_name,
+        image_name,
+        organizationid: parsedOrganizationId,
+        isactive: true,
+      },
+      select: {
+        level: true,
+      },
+    });
+
+    const levels = [...new Set(qcSubmissions.map(submission => parseInt(submission.level, 10)))];
+    const allTemplatesPresent = templateIds.every(templateId => levels.includes(templateId));
+
+    await prisma.imagecollections.updateMany({
+      where: {
+        batchname: batch_name,
+        image: `/uploads/${batch_name}/${image_name}`,
+      },
+      data: {
+        qcimagestatus: allTemplatesPresent, // true or false
+      },
     });
 
     return new Response(

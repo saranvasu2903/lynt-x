@@ -6691,6 +6691,7 @@ export namespace Prisma {
     completed: string | null
     imagestatus: boolean | null
     userid: string | null
+    qcimagestatus: boolean | null
   }
 
   export type ImagecollectionsMaxAggregateOutputType = {
@@ -6750,6 +6751,7 @@ export namespace Prisma {
     completed: string | null
     imagestatus: boolean | null
     userid: string | null
+    qcimagestatus: boolean | null
   }
 
   export type ImagecollectionsCountAggregateOutputType = {
@@ -6809,6 +6811,7 @@ export namespace Prisma {
     completed: number
     imagestatus: number
     userid: number
+    qcimagestatus: number
     _all: number
   }
 
@@ -6890,6 +6893,7 @@ export namespace Prisma {
     completed?: true
     imagestatus?: true
     userid?: true
+    qcimagestatus?: true
   }
 
   export type ImagecollectionsMaxAggregateInputType = {
@@ -6949,6 +6953,7 @@ export namespace Prisma {
     completed?: true
     imagestatus?: true
     userid?: true
+    qcimagestatus?: true
   }
 
   export type ImagecollectionsCountAggregateInputType = {
@@ -7008,6 +7013,7 @@ export namespace Prisma {
     completed?: true
     imagestatus?: true
     userid?: true
+    qcimagestatus?: true
     _all?: true
   }
 
@@ -7154,6 +7160,7 @@ export namespace Prisma {
     completed: string | null
     imagestatus: boolean | null
     userid: string | null
+    qcimagestatus: boolean | null
     _count: ImagecollectionsCountAggregateOutputType | null
     _avg: ImagecollectionsAvgAggregateOutputType | null
     _sum: ImagecollectionsSumAggregateOutputType | null
@@ -7232,6 +7239,7 @@ export namespace Prisma {
     completed?: boolean
     imagestatus?: boolean
     userid?: boolean
+    qcimagestatus?: boolean
   }, ExtArgs["result"]["imagecollections"]>
 
   export type ImagecollectionsSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -7291,6 +7299,7 @@ export namespace Prisma {
     completed?: boolean
     imagestatus?: boolean
     userid?: boolean
+    qcimagestatus?: boolean
   }, ExtArgs["result"]["imagecollections"]>
 
   export type ImagecollectionsSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -7350,6 +7359,7 @@ export namespace Prisma {
     completed?: boolean
     imagestatus?: boolean
     userid?: boolean
+    qcimagestatus?: boolean
   }, ExtArgs["result"]["imagecollections"]>
 
   export type ImagecollectionsSelectScalar = {
@@ -7409,9 +7419,10 @@ export namespace Prisma {
     completed?: boolean
     imagestatus?: boolean
     userid?: boolean
+    qcimagestatus?: boolean
   }
 
-  export type ImagecollectionsOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "filename" | "image" | "status" | "created_date" | "batchname" | "stage" | "uniqueid" | "file_type" | "ocr_full_text" | "processed_date" | "isactive" | "createdat" | "updatedat" | "header_locked" | "party_locked" | "legal_locked" | "headerstatus" | "legalstatus" | "partystatus" | "headerlocked_timing" | "legallocked_timing" | "partylocked_timing" | "indexing_assigned" | "header_assigned" | "propertyindex_assigned" | "indexing_locked" | "propertyindex_locked" | "propertyindexstatus" | "indexinglocked_timing" | "propertyindexlocked_timing" | "indexing_completed" | "propertyindex_completed" | "header_completed" | "party_completed" | "legal_completed" | "qc_locked" | "qc_assigned" | "qc_completed" | "indexlocked_timing" | "pilocked_timing" | "duplicatestatus" | "pi_pending_queue" | "legal_pending_queue" | "qcstatus" | "indexingcompleted_timing" | "propertyindexcompleted_timing" | "headercompleted_timing" | "partycompleted_timing" | "legalcompleted_timing" | "qccompleted_timing" | "organizationId" | "assigned" | "completed" | "imagestatus" | "userid", ExtArgs["result"]["imagecollections"]>
+  export type ImagecollectionsOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "filename" | "image" | "status" | "created_date" | "batchname" | "stage" | "uniqueid" | "file_type" | "ocr_full_text" | "processed_date" | "isactive" | "createdat" | "updatedat" | "header_locked" | "party_locked" | "legal_locked" | "headerstatus" | "legalstatus" | "partystatus" | "headerlocked_timing" | "legallocked_timing" | "partylocked_timing" | "indexing_assigned" | "header_assigned" | "propertyindex_assigned" | "indexing_locked" | "propertyindex_locked" | "propertyindexstatus" | "indexinglocked_timing" | "propertyindexlocked_timing" | "indexing_completed" | "propertyindex_completed" | "header_completed" | "party_completed" | "legal_completed" | "qc_locked" | "qc_assigned" | "qc_completed" | "indexlocked_timing" | "pilocked_timing" | "duplicatestatus" | "pi_pending_queue" | "legal_pending_queue" | "qcstatus" | "indexingcompleted_timing" | "propertyindexcompleted_timing" | "headercompleted_timing" | "partycompleted_timing" | "legalcompleted_timing" | "qccompleted_timing" | "organizationId" | "assigned" | "completed" | "imagestatus" | "userid" | "qcimagestatus", ExtArgs["result"]["imagecollections"]>
 
   export type $ImagecollectionsPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Imagecollections"
@@ -7473,6 +7484,7 @@ export namespace Prisma {
       completed: string | null
       imagestatus: boolean | null
       userid: string | null
+      qcimagestatus: boolean | null
     }, ExtArgs["result"]["imagecollections"]>
     composites: {}
   }
@@ -7952,6 +7964,7 @@ export namespace Prisma {
     readonly completed: FieldRef<"Imagecollections", 'String'>
     readonly imagestatus: FieldRef<"Imagecollections", 'Boolean'>
     readonly userid: FieldRef<"Imagecollections", 'String'>
+    readonly qcimagestatus: FieldRef<"Imagecollections", 'Boolean'>
   }
     
 
@@ -15326,7 +15339,8 @@ export namespace Prisma {
     assigned: 'assigned',
     completed: 'completed',
     imagestatus: 'imagestatus',
-    userid: 'userid'
+    userid: 'userid',
+    qcimagestatus: 'qcimagestatus'
   };
 
   export type ImagecollectionsScalarFieldEnum = (typeof ImagecollectionsScalarFieldEnum)[keyof typeof ImagecollectionsScalarFieldEnum]
@@ -15948,6 +15962,7 @@ export namespace Prisma {
     completed?: StringNullableFilter<"Imagecollections"> | string | null
     imagestatus?: BoolNullableFilter<"Imagecollections"> | boolean | null
     userid?: StringNullableFilter<"Imagecollections"> | string | null
+    qcimagestatus?: BoolNullableFilter<"Imagecollections"> | boolean | null
   }
 
   export type ImagecollectionsOrderByWithRelationInput = {
@@ -16007,6 +16022,7 @@ export namespace Prisma {
     completed?: SortOrderInput | SortOrder
     imagestatus?: SortOrderInput | SortOrder
     userid?: SortOrderInput | SortOrder
+    qcimagestatus?: SortOrderInput | SortOrder
   }
 
   export type ImagecollectionsWhereUniqueInput = Prisma.AtLeast<{
@@ -16069,6 +16085,7 @@ export namespace Prisma {
     completed?: StringNullableFilter<"Imagecollections"> | string | null
     imagestatus?: BoolNullableFilter<"Imagecollections"> | boolean | null
     userid?: StringNullableFilter<"Imagecollections"> | string | null
+    qcimagestatus?: BoolNullableFilter<"Imagecollections"> | boolean | null
   }, "id">
 
   export type ImagecollectionsOrderByWithAggregationInput = {
@@ -16128,6 +16145,7 @@ export namespace Prisma {
     completed?: SortOrderInput | SortOrder
     imagestatus?: SortOrderInput | SortOrder
     userid?: SortOrderInput | SortOrder
+    qcimagestatus?: SortOrderInput | SortOrder
     _count?: ImagecollectionsCountOrderByAggregateInput
     _avg?: ImagecollectionsAvgOrderByAggregateInput
     _max?: ImagecollectionsMaxOrderByAggregateInput
@@ -16195,6 +16213,7 @@ export namespace Prisma {
     completed?: StringNullableWithAggregatesFilter<"Imagecollections"> | string | null
     imagestatus?: BoolNullableWithAggregatesFilter<"Imagecollections"> | boolean | null
     userid?: StringNullableWithAggregatesFilter<"Imagecollections"> | string | null
+    qcimagestatus?: BoolNullableWithAggregatesFilter<"Imagecollections"> | boolean | null
   }
 
   export type TemplateWhereInput = {
@@ -17109,6 +17128,7 @@ export namespace Prisma {
     completed?: string | null
     imagestatus?: boolean | null
     userid?: string | null
+    qcimagestatus?: boolean | null
   }
 
   export type ImagecollectionsUncheckedCreateInput = {
@@ -17168,6 +17188,7 @@ export namespace Prisma {
     completed?: string | null
     imagestatus?: boolean | null
     userid?: string | null
+    qcimagestatus?: boolean | null
   }
 
   export type ImagecollectionsUpdateInput = {
@@ -17226,6 +17247,7 @@ export namespace Prisma {
     completed?: NullableStringFieldUpdateOperationsInput | string | null
     imagestatus?: NullableBoolFieldUpdateOperationsInput | boolean | null
     userid?: NullableStringFieldUpdateOperationsInput | string | null
+    qcimagestatus?: NullableBoolFieldUpdateOperationsInput | boolean | null
   }
 
   export type ImagecollectionsUncheckedUpdateInput = {
@@ -17285,6 +17307,7 @@ export namespace Prisma {
     completed?: NullableStringFieldUpdateOperationsInput | string | null
     imagestatus?: NullableBoolFieldUpdateOperationsInput | boolean | null
     userid?: NullableStringFieldUpdateOperationsInput | string | null
+    qcimagestatus?: NullableBoolFieldUpdateOperationsInput | boolean | null
   }
 
   export type ImagecollectionsCreateManyInput = {
@@ -17344,6 +17367,7 @@ export namespace Prisma {
     completed?: string | null
     imagestatus?: boolean | null
     userid?: string | null
+    qcimagestatus?: boolean | null
   }
 
   export type ImagecollectionsUpdateManyMutationInput = {
@@ -17402,6 +17426,7 @@ export namespace Prisma {
     completed?: NullableStringFieldUpdateOperationsInput | string | null
     imagestatus?: NullableBoolFieldUpdateOperationsInput | boolean | null
     userid?: NullableStringFieldUpdateOperationsInput | string | null
+    qcimagestatus?: NullableBoolFieldUpdateOperationsInput | boolean | null
   }
 
   export type ImagecollectionsUncheckedUpdateManyInput = {
@@ -17461,6 +17486,7 @@ export namespace Prisma {
     completed?: NullableStringFieldUpdateOperationsInput | string | null
     imagestatus?: NullableBoolFieldUpdateOperationsInput | boolean | null
     userid?: NullableStringFieldUpdateOperationsInput | string | null
+    qcimagestatus?: NullableBoolFieldUpdateOperationsInput | boolean | null
   }
 
   export type TemplateCreateInput = {
@@ -18517,6 +18543,7 @@ export namespace Prisma {
     completed?: SortOrder
     imagestatus?: SortOrder
     userid?: SortOrder
+    qcimagestatus?: SortOrder
   }
 
   export type ImagecollectionsAvgOrderByAggregateInput = {
@@ -18586,6 +18613,7 @@ export namespace Prisma {
     completed?: SortOrder
     imagestatus?: SortOrder
     userid?: SortOrder
+    qcimagestatus?: SortOrder
   }
 
   export type ImagecollectionsMinOrderByAggregateInput = {
@@ -18645,6 +18673,7 @@ export namespace Prisma {
     completed?: SortOrder
     imagestatus?: SortOrder
     userid?: SortOrder
+    qcimagestatus?: SortOrder
   }
 
   export type ImagecollectionsSumOrderByAggregateInput = {

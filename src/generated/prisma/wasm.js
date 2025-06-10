@@ -229,7 +229,8 @@ exports.Prisma.ImagecollectionsScalarFieldEnum = {
   assigned: 'assigned',
   completed: 'completed',
   imagestatus: 'imagestatus',
-  userid: 'userid'
+  userid: 'userid',
+  qcimagestatus: 'qcimagestatus'
 };
 
 exports.Prisma.TemplateScalarFieldEnum = {
