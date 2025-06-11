@@ -4,8 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import MetricCard from "@/components/MetricCard";
 import MiniBarChart from "@/components/Dashboard/mini-bar-chart";
-import PerformanceChart from "@/components/Dashboard/performance-chart";
-import ExpandTable from "@/components/ExpandTable";
+import AdvancedExpandTable from "@/components/ExpandTable";
 import { useBatches, useGetMetricsData, useUserData } from "@/hooks/dashboard";
 import { useOrganizationUsers } from "@/hooks/organization";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -20,10 +19,11 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import Progress from "@/components/Dashboard/Progress";
 import { X } from "lucide-react";
 import * as pdfjsLib from "pdfjs-dist";
+import BatchPerformanceChart from "@/components/Dashboard/performance-chart";
 pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.js";
 
 export default function Dashboard() {
-  const [convertedImage, setConvertedImage] = useState(null);
+  const [convertedImages, setConvertedImages] = useState([]);
   const [isConverting, setIsConverting] = useState(false);
   const { data: dbUser, isLoading: userLoading } = useUserData();
   const organizationId = dbUser?.organizationId;
@@ -37,39 +37,47 @@ export default function Dashboard() {
   const isLoading =
     userLoading || batchesLoading || usersLoading || isMetricsDataLoading;
 
-  // console.log("usersinfo", users);
-
   const batchColumns = [
     { header: "Batch Name", accessor: "batchname" },
     { header: "Date", accessor: "createdat" },
     { header: "Total Images", accessor: "imagescount" },
   ];
 
-  const convertPdfToImage = async (pdfUrl) => {
+  const convertPdfToImage = async (image) => {
+    setIsConverting(true);
+    setConvertedImages([]);
+
+    const allConvertedImages = [];
+
     try {
-      setIsConverting(true);
-      setConvertedImage(null);
+      const pdf = await pdfjsLib.getDocument(image.image).promise;
+      const numPages = pdf.numPages;
 
-      const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
-      const page = await pdf.getPage(1);
+      for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 1.0 });
 
-      const viewport = page.getViewport({ scale: 1.0 });
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
 
-      const canvas = document.createElement("canvas");
-      const context = canvas.getContext("2d");
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
+        await page.render({ canvasContext: context, viewport }).promise;
 
-      await page.render({
-        canvasContext: context,
-        viewport: viewport,
-      }).promise;
+        // const displayFilename = `${image.filename}_page${pageNum}.png`;
 
-      const imageData = canvas.toDataURL("image/png");
-      setConvertedImage(imageData);
+        allConvertedImages.push({
+          // filename: displayFilename,
+          originalFilename: image.filename,
+          page: pageNum,
+          dataUrl: canvas.toDataURL("image/png"),
+        });
+      }
+
+      setConvertedImages(allConvertedImages);
     } catch (error) {
-      console.error("Error converting PDF to image:", error);
-      setConvertedImage(null);
+      console.error("Error converting PDF to images:", error);
+      setConvertedImages([]);
     } finally {
       setIsConverting(false);
     }
@@ -89,10 +97,6 @@ export default function Dashboard() {
     totalBatches > 0
       ? Number(((metrics?.finishedbatchcount / totalBatches) * 100).toFixed(2))
       : 0;
-
-  // if (isLoading) {
-  //   return <LoadingSpinner />;
-  // }
 
   return (
     <div className="w-full relative min-h-screen">
@@ -132,7 +136,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
         <div className="col-span-3 lg:col-span-2">
-          <PerformanceChart title="Batch Performance" />
+          <BatchPerformanceChart title="Batch Performance" />
         </div>
         <div>
           <Progress />
@@ -145,7 +149,7 @@ export default function Dashboard() {
         <div className="bg-[#f9f8f6] rounded-xl col-span-2 p-5 transition-shadow duration-300 w-full">
           <h2 className="text-xl font-bold text-black mb-3">Batch List</h2>
           <div className="overflow-x-auto bg-white rounded-xl">
-            <ExpandTable
+            <AdvancedExpandTable
               columns={batchColumns}
               data={batches}
               enableSorting={true}
@@ -210,9 +214,7 @@ export default function Dashboard() {
                                   <DrawerTrigger asChild>
                                     <button
                                       className="flex items-center cursor-pointer gap-2 bg-blue-500 text-white px-3 py-1 rounded-xl hover:bg-blue-600 transition-colors"
-                                      onClick={() =>
-                                        convertPdfToImage(image.image)
-                                      }
+                                      onClick={() => convertPdfToImage(image)}
                                     >
                                       <svg
                                         xmlns="http://www.w3.org/2000/svg"
@@ -236,14 +238,24 @@ export default function Dashboard() {
                                       <div className="flex justify-center items-center h-full">
                                         <LoadingSpinner />
                                       </div>
-                                    ) : convertedImage ? (
-                                      <img
-                                        src={convertedImage}
-                                        alt={image.filename}
-                                      />
+                                    ) : convertedImages.length > 0 ? (
+                                      <div className="space-y-6">
+                                        {convertedImages.map((img, idx) => (
+                                          <div key={idx}>
+                                            <p className="text-sm font-semibold mb-1">
+                                              {img.filename} (Page {img.page})
+                                            </p>
+                                            <img
+                                              src={img.dataUrl}
+                                              alt={img.filename}
+                                              className="w-full rounded-md"
+                                            />
+                                          </div>
+                                        ))}
+                                      </div>
                                     ) : (
                                       <p className="text-gray-600">
-                                        no image available.
+                                        No images available.
                                       </p>
                                     )}
                                   </DrawerContent>

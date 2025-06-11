@@ -1,7 +1,13 @@
 "use client";
 import React, { useState } from "react";
 import ExpandTable from "@/components/ExpandTable";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useBatches } from "@/hooks/dashboard";
 import { useGetWorkMonitor, useReassignUser } from "@/hooks/workmonitor";
@@ -9,12 +15,18 @@ import { useGetAllTemplates } from "@/hooks/formBuilder";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useGetOrganizationUsers } from "@/hooks/users";
 import toast from "react-hot-toast";
-import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle, DrawerClose } from "@/components/ui/drawer";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+  DrawerTitle,
+  DrawerClose,
+} from "@/components/ui/drawer";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { X } from "lucide-react";
 import * as pdfjsLib from "pdfjs-dist";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.js";
 
 export default function WorkMonitor() {
   const [batch, setBatch] = useState("all");
@@ -22,29 +34,50 @@ export default function WorkMonitor() {
   const [reassignUser, setReassignUser] = useState("");
   const [selectedRows, setSelectedRows] = useState([]);
   const [isReassign, setIsReassign] = useState(false);
-  const [convertedImage, setConvertedImage] = useState(null);
+  const [convertedImage, setConvertedImage] = useState([]);
   const [isConverting, setIsConverting] = useState(false);
 
   const { data: batches, isLoading: batchesLoading } = useBatches();
-  const { workMonitorData: allWorkMonitorData = [], isLoading: allWorkMonitorLoading } = useGetWorkMonitor("all");
-  const { workMonitorData: batchWorkMonitorData = [], isLoading: batchWorkMonitorLoading } = useGetWorkMonitor(batch !== "all" ? batch : null);
+  const {
+    workMonitorData: allWorkMonitorData = [],
+    isLoading: allWorkMonitorLoading,
+  } = useGetWorkMonitor("all");
+  const {
+    workMonitorData: batchWorkMonitorData = [],
+    isLoading: batchWorkMonitorLoading,
+  } = useGetWorkMonitor(batch !== "all" ? batch : null);
   const { templates = [], isFetching: templatesLoading } = useGetAllTemplates();
-  const { organizationUsers = [], isLoading: orgUsersLoading, isError: orgUsersError } = useGetOrganizationUsers();
-  const { reassignUser: reassignUserMutation, isReassigning } = useReassignUser();
-  const isLoading = batchesLoading || batchWorkMonitorLoading || templatesLoading || orgUsersLoading || allWorkMonitorLoading;
+  const {
+    organizationUsers = [],
+    isLoading: orgUsersLoading,
+    isError: orgUsersError,
+  } = useGetOrganizationUsers();
+  const { reassignUser: reassignUserMutation, isReassigning } =
+    useReassignUser();
+  const isLoading =
+    batchesLoading ||
+    batchWorkMonitorLoading ||
+    templatesLoading ||
+    orgUsersLoading ||
+    allWorkMonitorLoading;
 
-  const workMonitorData = batch === "all" ? allWorkMonitorData : batchWorkMonitorData;
-  const filteredOrgUsers = organizationUsers.filter((user) => user.role !== "superadmin");
+  const workMonitorData =
+    batch === "all" ? allWorkMonitorData : batchWorkMonitorData;
+  const filteredOrgUsers = organizationUsers.filter(
+    (user) => user.role !== "superadmin"
+  );
   const selectedUserIds = selectedRows.map((row) => row.userid);
-  const reassignableUsers = filteredOrgUsers.filter((user) => !selectedUserIds.includes(String(user.id)));
+  const reassignableUsers = filteredOrgUsers.filter(
+    (user) => !selectedUserIds.includes(String(user.id))
+  );
 
   const toTitleCase = (str) => {
-  if (!str) return str;
-  return str.split(' ').map(word =>
-    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-  ).join(' ');
-};
-
+    if (!str) return str;
+    return str
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  };
 
   const userIdToUsernameMap = organizationUsers.reduce((map, orgUser) => {
     const username = orgUser.fullname ?? `User ${orgUser.id}`;
@@ -66,7 +99,11 @@ export default function WorkMonitor() {
   ]);
 
   const mainColumns = [
-    { header: "User Name", accessor: "userid", cell: (row) => userIdToUsernameMap[row.userid] || row.userid },
+    {
+      header: "User Name",
+      accessor: "userid",
+      cell: (row) => userIdToUsernameMap[row.userid] || row.userid,
+    },
     ...dynamicColumns,
   ];
 
@@ -124,28 +161,36 @@ export default function WorkMonitor() {
   const convertPdfToImage = async (pdfUrl) => {
     try {
       setIsConverting(true);
-      setConvertedImage(null);
+      setConvertedImage([]);
 
       const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
-      const page = await pdf.getPage(1);
+      const numPages = pdf.numPages;
+      const allImages = [];
 
-      const viewport = page.getViewport({ scale: 1.0 });
+      for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 1.0 });
 
-      const canvas = document.createElement("canvas");
-      const context = canvas.getContext("2d");
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
 
-      await page.render({
-        canvasContext: context,
-        viewport: viewport,
-      }).promise;
+        await page.render({
+          canvasContext: context,
+          viewport: viewport,
+        }).promise;
 
-      const imageData = canvas.toDataURL("image/png");
-      setConvertedImage(imageData);
+        allImages.push({
+          dataUrl: canvas.toDataURL("image/png"),
+          page: pageNum,
+        });
+      }
+
+      setConvertedImage(allImages);
     } catch (error) {
-      console.error("Error converting PDF to image:", error);
-      setConvertedImage(null);
+      console.error("Error converting PDF to images:", error);
+      setConvertedImage([]);
     } finally {
       setIsConverting(false);
     }
@@ -183,11 +228,15 @@ export default function WorkMonitor() {
                       <input
                         type="checkbox"
                         className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        checked={selectedRows.some((selected) => selected.image === image.image)}
+                        checked={selectedRows.some(
+                          (selected) => selected.image === image.image
+                        )}
                         onChange={() => handleRowSelect(image)}
                       />
                     </td>
-                    <td className="py-2 px-4 max-w-xs truncate">{image.filename}</td>
+                    <td className="py-2 px-4 max-w-xs truncate">
+                      {image.filename}
+                    </td>
                     <td className="py-2 px-4">
                       <Drawer direction="right">
                         <DrawerTrigger asChild>
@@ -217,12 +266,21 @@ export default function WorkMonitor() {
                             <div className="flex justify-center items-center h-full">
                               <LoadingSpinner />
                             </div>
-                          ) : convertedImage ? (
-                            <img
-                              src={convertedImage}
-                              alt={image.filename}
-                              
-                            />
+                          ) : convertedImage.length > 0 ? (
+                            <div className="space-y-6">
+                              {convertedImage.map((img, idx) => (
+                                <div key={idx}>
+                                  <p className="text-sm font-semibold mb-1">
+                                    (Page {img.page})
+                                  </p>
+                                  <img
+                                    src={img.dataUrl}
+                                    alt={`${image.filename} Page ${img.page}`}
+                                    className="w-full rounded-md"
+                                  />
+                                </div>
+                              ))}
+                            </div>
                           ) : (
                             <p className="text-gray-600">No image available.</p>
                           )}
@@ -233,10 +291,14 @@ export default function WorkMonitor() {
                     {templates.map((template) => (
                       <React.Fragment key={template.id}>
                         <td className="py-2 px-4">
-                          {image.assignedtemplate?.includes(template.id) ? 1 : 0}
+                          {image.assignedtemplate?.includes(template.id)
+                            ? 1
+                            : 0}
                         </td>
                         <td className="py-2 px-4">
-                          {image.completedtemplate?.includes(template.id) ? 1 : 0}
+                          {image.completedtemplate?.includes(template.id)
+                            ? 1
+                            : 0}
                         </td>
                       </React.Fragment>
                     ))}
@@ -257,7 +319,9 @@ export default function WorkMonitor() {
       ? workMonitorData
       : workMonitorData
           .map((item) => {
-            const filteredCollections = item.imagecollections?.filter((file) => file.userid === user);
+            const filteredCollections = item.imagecollections?.filter(
+              (file) => file.userid === user
+            );
             return filteredCollections && filteredCollections.length > 0
               ? { ...item, imagecollections: filteredCollections }
               : null;
@@ -270,7 +334,9 @@ export default function WorkMonitor() {
 
       <div className="flex items-center gap-6 mb-4">
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700 mb-1">Batch</label>
+          <label className="text-sm font-medium text-gray-700 mb-1">
+            Batch
+          </label>
           <Select value={batch} onValueChange={setBatch}>
             <SelectTrigger className="w-full max-w-[400px] min-w-[250px]">
               <SelectValue placeholder="Select Batch" />
@@ -304,39 +370,45 @@ export default function WorkMonitor() {
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700 mb-1">Reassign To</label>
+          <label className="text-sm font-medium text-gray-700 mb-1">
+            Reassign To
+          </label>
           <Select value={reassignUser} onValueChange={setReassignUser}>
             <SelectTrigger className="w-full max-w-[400px] min-w-[250px]">
               <SelectValue placeholder="Select User" />
             </SelectTrigger>
             <SelectContent>
               {selectedRows.length > 0 ? (
-                  reassignableUsers.map((user) => (
-                    <SelectItem key={user.id} value={String(user.id)}>
-                      {userIdToUsernameMap[String(user.id)]}
-                    </SelectItem>
-                  ))
-                ) : (
-                  <div className="text-gray-400 px-3 py-2 text-sm">
-                    Select atleast one image
-                  </div>
-                )}
+                reassignableUsers.map((user) => (
+                  <SelectItem key={user.id} value={String(user.id)}>
+                    {userIdToUsernameMap[String(user.id)]}
+                  </SelectItem>
+                ))
+              ) : (
+                <div className="text-gray-400 px-3 py-2 text-sm">
+                  Select atleast one image
+                </div>
+              )}
             </SelectContent>
           </Select>
         </div>
 
-        {selectedRows.length > 0 && reassignUser && (<div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700 mb-1 opacity-0">Placeholder</label>
-          <Button
-            type="button"
-            variant="default"
-            className="bg-gray-800 hover:bg-gray-900 cursor-pointer"
-            onClick={handleReassign}
-            disabled={isReassign}
-          >
-            {isReassign ? "Reassigning..." : "Reassign To"}
-          </Button>
-        </div>)}
+        {selectedRows.length > 0 && reassignUser && (
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-700 mb-1 opacity-0">
+              Placeholder
+            </label>
+            <Button
+              type="button"
+              variant="default"
+              className="bg-gray-800 hover:bg-gray-900 cursor-pointer"
+              onClick={handleReassign}
+              disabled={isReassign}
+            >
+              {isReassign ? "Reassigning..." : "Reassign To"}
+            </Button>
+          </div>
+        )}
       </div>
 
       {isLoading ? (

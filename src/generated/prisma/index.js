@@ -333,7 +333,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\lynt-x application\\lynt-x\\lynt-x\\src\\generated\\prisma",
+      "value": "D:\\FSD\\Legscies Techno\\jun03\\lynt-x\\src\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -347,7 +347,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\lynt-x application\\lynt-x\\lynt-x\\prisma\\schema.prisma",
+    "sourceFilePath": "D:\\FSD\\Legscies Techno\\jun03\\lynt-x\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {

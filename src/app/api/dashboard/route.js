@@ -1,8 +1,8 @@
 import { PrismaClient } from '../../../generated/prisma';
 import { NextResponse } from 'next/server';
- 
+
 const prisma = new PrismaClient();
- 
+
 export async function GET(request) {
   try {
     const organizationId = request.headers.get('x-organization-id');
@@ -12,45 +12,51 @@ export async function GET(request) {
         { status: 400 }
       );
     }
- 
+
     const parsedOrgId = Number(organizationId);
-    const batchNames = await prisma.batch.findMany({
+
+    // Step 1: Get all active batches
+    const batches = await prisma.batch.findMany({
       where: { organizationId: parsedOrgId },
       select: { batchname: true },
       distinct: ['batchname'],
     });
- 
-    const totalbatch = batchNames.length;
+
+    const totalbatch = batches.length;
     let finishedbatchcount = 0;
- 
-    for (const { batchname } of batchNames) {
+
+    // Step 2 & 3: Check images and qcimagestatus per batch
+    for (const { batchname } of batches) {
       const images = await prisma.imagecollections.findMany({
-        where: { batchname, organizationId: parsedOrgId },
-        select: { image: true },
-      });
- 
-      const filenames = images.map(img => img.image.split('/').pop());
-      if (filenames.length === 0) continue;
- 
-      const existing = await prisma.qcFormSubmission.findMany({
         where: {
-          image_name: { in: filenames },
+          batchname,
+          organizationId: parsedOrgId,
         },
-        select: { image_name: true },
+        select: {
+          qcimagestatus: true,
+        },
       });
- 
-      const submittedNames = new Set(existing.map(e => e.image_name));
-      const allSubmitted = filenames.every(name => submittedNames.has(name));
-      if (allSubmitted) finishedbatchcount++;
+
+      if (images.length === 0) continue;
+
+      const allQcPassed = images.every(img => img.qcimagestatus === true);
+      if (allQcPassed) {
+        finishedbatchcount++;
+      }
     }
- 
+
+    // Step 4: Calculate pending
     const pendingbatchescount = totalbatch - finishedbatchcount;
- 
+
+    // Total template count
     const totaltemplate = await prisma.template.count({
-      where: { organizationId: parsedOrgId, isDelete: false },
+      where: {
+        organizationId: parsedOrgId,
+        isDelete: false,
+      },
     });
- 
-    // === Monthly Chart Data ===
+
+    // Monthly Chart Data
     const rawChartData = await prisma.$queryRaw`
       SELECT
         EXTRACT(YEAR FROM "updatedat")::INT AS year,
@@ -63,7 +69,7 @@ export async function GET(request) {
       GROUP BY year, month, month_num
       ORDER BY year, month_num;
     `;
- 
+
     // Format chart data
     const staticData = {};
     for (const row of rawChartData) {
@@ -75,8 +81,8 @@ export async function GET(request) {
         pending: Number(pending),
       });
     }
- 
-    // Ensure months are ordered correctly
+
+    // Ensure months are ordered
     const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     for (const year in staticData) {
@@ -84,6 +90,8 @@ export async function GET(request) {
         (a, b) => monthOrder.indexOf(a.name) - monthOrder.indexOf(b.name)
       );
     }
+
+    // Final Response
     return NextResponse.json(
       {
         totalbatch,
@@ -94,7 +102,7 @@ export async function GET(request) {
       },
       { status: 200 }
     );
- 
+
   } catch (err) {
     console.error('Error:', err);
     return NextResponse.json(
@@ -105,4 +113,3 @@ export async function GET(request) {
     await prisma.$disconnect();
   }
 }
- 

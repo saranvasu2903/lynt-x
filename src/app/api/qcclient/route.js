@@ -14,14 +14,30 @@ export async function GET(request) {
       );
     }
 
+    const orgId = Number(organizationId);
+
+    // Step 1: Get all active template IDs
+    const activeTemplates = await prisma.template.findMany({
+      where: {
+        isActive: true,
+        isDelete: false,
+        organizationId: orgId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    const activeTemplateIds = activeTemplates.map(t => String(t.id)); // convert to string to match level column
+console.log(activeTemplateIds,"active templateid")
+    // Step 2: Get all batches for the org
     const batches = await prisma.batch.findMany({
       where: {
-        organizationId: Number(organizationId),
+        organizationId: orgId,
       },
       select: {
         id: true,
         batchname: true,
-        organizationId: true,
       },
     });
 
@@ -46,42 +62,62 @@ export async function GET(request) {
 
         if (images.length === 0) return null;
 
-        const imageFilenames = images.map(img => img.image.split('/').pop());
+        const imageNames = images.map(img => img.image.split('/').pop());
 
-        const existingSubmissions = await prisma.qcFormSubmission.findMany({
+        // Step 3: Get QC submissions for these images and batch
+        const submissions = await prisma.qcFormSubmission.findMany({
           where: {
-            image_name: {
-              in: imageFilenames,
-            },
+            image_name: { in: imageNames },
+            batch_name: batch.batchname,
+            organizationid: orgId,
+            isactive: true,
           },
           select: {
             image_name: true,
+            level: true,
           },
         });
 
-        const existingSet = new Set(existingSubmissions.map(sub => sub.image_name));
+        // Group levels per image
+        const imageToLevelsMap = {};
+        submissions.forEach(sub => {
+          const img = sub.image_name;
+          if (!imageToLevelsMap[img]) imageToLevelsMap[img] = new Set();
+          imageToLevelsMap[img].add(sub.level);
+        });
 
-        const allImagesExist = imageFilenames.every(name => existingSet.has(name));
-        if (allImagesExist) return null;
+        // Step 4: Filter images that have *all* active template levels submitted
+        const filteredImages = images.filter(img => {
+          const imgName = img.image.split('/').pop();
+          const submittedLevels = imageToLevelsMap[imgName];
+          if (!submittedLevels) return true; // not submitted at all → include
+          const submittedLevelArray = Array.from(submittedLevels);
+          return !activeTemplateIds.every(id => submittedLevelArray.includes(id)); // if all levels exist → exclude
+        });
+
+        if (filteredImages.length === 0) return null;
 
         return {
           id: batch.id,
           batchname: batch.batchname,
-          totalImages: imageFilenames.length,
-          submittedImagesCount: existingSet.size,
-          pendingImagesCount: imageFilenames.length - existingSet.size,
-          imagecollection: images.map((img) => ({
-            id: img.id,
-            filename: img.filename.split('/').pop(), 
-            image: img.image,
-            extractedImageName: img.image.split('/').pop(), 
-            organizationId: img.organizationId,
-            assigned: img.assigned,
-            completed: img.completed,
-            imagestatus: img.imagestatus,
-            userid: img.userid,
-            isSubmitted: existingSet.has(img.image.split('/').pop()), 
-          })),
+          totalImages: images.length,
+          submittedImagesCount: images.length - filteredImages.length,
+          pendingImagesCount: filteredImages.length,
+          imagecollection: filteredImages.map(img => {
+            const imgName = img.image.split('/').pop();
+            return {
+              id: img.id,
+              filename: img.filename.split('/').pop(),
+              image: img.image,
+              extractedImageName: imgName,
+              organizationId: img.organizationId,
+              assigned: img.assigned,
+              completed: img.completed,
+              imagestatus: img.imagestatus,
+              userid: img.userid,
+              isSubmitted: imageToLevelsMap[imgName]?.size === activeTemplateIds.length
+            };
+          }),
         };
       })
     );

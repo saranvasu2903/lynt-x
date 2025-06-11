@@ -83,7 +83,7 @@ export async function GET(request) {
         incompleteBatches.push(batchData);
       }
     }
-    const completedBatchNames = completedBatches.map((batch) => batch.batchname);
+const completedBatchNames = completedBatches.map((batch) => batch.batchname);
     return NextResponse.json(
       {
         completedBatches,

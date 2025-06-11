@@ -13,6 +13,7 @@ import {
   UserRoundCog,
   UserCheck,
   History,
+  BarChart2,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useClerk } from "@clerk/nextjs";
@@ -60,6 +61,11 @@ const navItems = [
     icon: <UserCheck className="w-5 h-5" />,
     label: "QC Client",
     href: "/qc-client",
+  },
+  {
+    icon: <BarChart2 className="w-5 h-5" />,
+    label: "Reports Summary",
+    href: "/reports-summary",
   },
   {
   icon: <History className="w-5 h-5" />,
