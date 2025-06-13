@@ -14,81 +14,67 @@ export async function GET(request) {
       );
     }
 
+    const orgId = Number(organizationId);
+
     const batches = await prisma.batch.findMany({
-      where: {
-        organizationId: Number(organizationId),
-      },
-      select: {
-        id: true,
-        batchname: true,
-        organizationId: true,
-      },
+      where: { organizationId: orgId },
+      select: { id: true, batchname: true },
     });
 
-    const incompleteBatches = [];
     const completedBatches = [];
+    const incompleteBatches = [];
 
-    for (const batch of batches) {
-      const images = await prisma.imagecollections.findMany({
-        where: {
-          batchname: batch.batchname,
-        },
-        select: {
-          id: true,
-          filename: true,
-          image: true,
-          organizationId: true,
-          assigned: true,
-          completed: true,
-          imagestatus: true,
-          userid: true,
-        },
-      });
-
-      if (images.length === 0) continue;
-
-      const imageFilenames = images.map(img => img.image.split('/').pop());
-
-      const existingSubmissions = await prisma.qcFormSubmission.findMany({
-        where: {
-          image_name: {
-            in: imageFilenames,
+    await Promise.all(
+      batches.map(async (batch) => {
+        const images = await prisma.imagecollections.findMany({
+          where: {
+            batchname: batch.batchname,           
           },
-        },
-        select: {
-          image_name: true,
-        },
-      });
+          select: {
+            id: true,
+            filename: true,
+            image: true,
+            organizationId: true,
+            assigned: true,
+            completed: true,
+            imagestatus: true,
+            qcimagestatus: true,
+            userid: true,
+          },
+        });
 
-      const existingSet = new Set(existingSubmissions.map(sub => sub.image_name));
-      const allImagesExist = imageFilenames.every(name => existingSet.has(name));
+        if (images.length === 0) return;
 
-      const batchData = {
-        id: batch.id,
-        batchname: batch.batchname,
-        totalImages: imageFilenames.length,
-        submittedImagesCount: existingSet.size,
-        pendingImagesCount: imageFilenames.length - existingSet.size,
-        imagecollection: images.map((img) => ({
-          id: img.id,
-          filename: img.filename.split('/').pop(),
-          image: img.image,
-         completed: img.completed ? JSON.parse(img.completed) : [],
-        })),
-      };
+    const completedImages = images.filter(img => img.qcimagestatus === true);
+    const incompleteImages = images.filter(img => !img.qcimagestatus);
 
-      if (allImagesExist) {
-        completedBatches.push(batchData);
-      } else {
-        incompleteBatches.push(batchData);
-      }
+    const batchData = {
+      id: batch.id,
+      batchname: batch.batchname,
+      totalImages: images.length,
+      submittedImagesCount: completedImages.length,
+      pendingImagesCount: incompleteImages.length,
+      imagecollection: images.map((img) => ({
+              id: img.id,
+              filename: img.filename.split('/').pop(),
+              image: img.image,
+            completed: img.completed ? JSON.parse(img.completed) : [],
+            })),
+    };
+
+    if (incompleteImages.length === 0) {
+      completedBatches.push(batchData);
+    } else {
+      incompleteBatches.push(batchData);
     }
-const completedBatchNames = completedBatches.map((batch) => batch.batchname);
+    })
+  );
+    const completedBatchesCount = completedBatches.length;
+    const incompleteBatchesCount= incompleteBatches.length;
+    
     return NextResponse.json(
       {
         completedBatches,
-        // completedBatchesCount: completedBatches.length,
-        // completedBatchNames,
       },
       { status: 200 }
     );
